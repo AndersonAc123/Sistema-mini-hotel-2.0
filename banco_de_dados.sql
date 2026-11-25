@@ -52,7 +52,63 @@ CREATE TABLE locacao (
     FOREIGN KEY (id_cliente)    REFERENCES cliente(id_cliente),
     FOREIGN KEY (numero_quarto) REFERENCES quarto(numero_quarto)
 );
+-- =========================================================
+-- ÍNDICES (OTIMIZAÇÃO DE CONSULTAS)
+-- =========================================================
 
+CREATE INDEX idx_cliente_cpf
+ON cliente (cpf);
+
+CREATE INDEX idx_quarto_status_ativo
+ON quarto (ativo, status_quarto);
+
+CREATE INDEX idx_locacao_status_saida
+ON locacao (status_caixa, data_hora_saida);
+
+CREATE INDEX idx_locacao_entrada
+ON locacao (data_hora_entrada);
+
+-- View 1: Quartos ativos com sua categoria e valor por hora
+CREATE OR REPLACE VIEW vw_quartos_ativos AS
+SELECT
+    q.numero_quarto,
+    q.status_quarto,
+    q.codigo_categoria,
+    cq.nome_categoria,
+    cq.valor_hora
+FROM quarto q
+INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
+WHERE q.ativo = 1;
+
+-- View 2: Quartos desativados (Soft Delete)
+CREATE OR REPLACE VIEW vw_quartos_inativos AS
+SELECT
+    q.numero_quarto,
+    cq.nome_categoria
+FROM quarto q
+INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
+WHERE q.ativo = 0;
+
+-- View 3: Locações completas (encapsula locacao + cliente + quarto + categoria_quarto)
+CREATE OR REPLACE VIEW vw_locacoes_detalhadas AS
+SELECT
+    l.id_locacao,
+    l.id_cliente,
+    c.nome,
+    c.cpf,
+    l.numero_quarto,
+    cq.nome_categoria,
+    cq.valor_hora,
+    l.data_hora_entrada,
+    l.data_hora_saida_estimada,
+    l.data_hora_saida,
+    l.valor_total,
+    l.status_caixa,
+    l.placa_veiculo
+FROM locacao l
+INNER JOIN cliente c           ON l.id_cliente = c.id_cliente
+INNER JOIN quarto q            ON l.numero_quarto = q.numero_quarto
+INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria;
 -- =========================================================
 -- Dados iniciais
 -- =========================================================

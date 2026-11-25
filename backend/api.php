@@ -16,11 +16,10 @@ switch ($acao) {
     
     case 'buscar_quartos':
         try {
-            $sql = "SELECT q.numero_quarto, q.status_quarto, cq.nome_categoria, cq.valor_hora
-                    FROM quarto q
-                    INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
-                    WHERE q.ativo = 1
-                    ORDER BY q.numero_quarto ASC";
+            // Alterado para usar a View vw_quartos_ativos
+            $sql = "SELECT numero_quarto, status_quarto, nome_categoria, valor_hora
+                    FROM vw_quartos_ativos
+                    ORDER BY numero_quarto ASC";
             $stmt = $pdo->query($sql);
             echo json_encode(['sucesso' => true, 'quartos' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
         } catch (Exception $e) {
@@ -77,12 +76,11 @@ switch ($acao) {
     case 'obter_detalhes_checkout':
         if (!empty($_GET['quarto'])) {
             try {
-                $sql = "SELECT l.id_locacao, l.data_hora_entrada, l.data_hora_saida_estimada, c.nome, cq.valor_hora
-                        FROM locacao l
-                        INNER JOIN cliente c ON l.id_cliente = c.id_cliente
-                        INNER JOIN quarto q ON l.numero_quarto = q.numero_quarto
-                        INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
-                        WHERE l.numero_quarto = :quarto AND l.data_hora_saida IS NULL LIMIT 1";
+                // Alterado para usar a View vw_locacoes_detalhadas
+                $sql = "SELECT id_locacao, data_hora_entrada, data_hora_saida_estimada, nome, valor_hora
+                        FROM vw_locacoes_detalhadas
+                        WHERE numero_quarto = :quarto AND data_hora_saida IS NULL
+                        LIMIT 1";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([':quarto' => $_GET['quarto']]);
                 $locacao = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -213,11 +211,11 @@ switch ($acao) {
 
     case 'buscar_historico':
         try {
-            $sql = "SELECT l.id_locacao, l.data_hora_entrada, l.data_hora_saida, l.valor_total, c.nome, q.numero_quarto
-                    FROM locacao l
-                    INNER JOIN cliente c ON l.id_cliente = c.id_cliente
-                    INNER JOIN quarto q ON l.numero_quarto = q.numero_quarto
-                    ORDER BY l.data_hora_entrada DESC LIMIT 50";
+            // Alterado para usar a View vw_locacoes_detalhadas
+            $sql = "SELECT id_locacao, data_hora_entrada, data_hora_saida, valor_total, nome, numero_quarto
+                    FROM vw_locacoes_detalhadas
+                    ORDER BY data_hora_entrada DESC
+                    LIMIT 50";
             $stmt = $pdo->query($sql);
             $historico = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($historico as &$linha) {
@@ -302,11 +300,10 @@ switch ($acao) {
 
     case 'buscar_quartos_inativos':
         try {
-            $sql = "SELECT q.numero_quarto, cq.nome_categoria
-                    FROM quarto q
-                    INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
-                    WHERE q.ativo = 0
-                    ORDER BY q.numero_quarto ASC";
+            // Alterado para usar a View vw_quartos_inativos
+            $sql = "SELECT numero_quarto, nome_categoria
+                    FROM vw_quartos_inativos
+                    ORDER BY numero_quarto ASC";
             $stmt = $pdo->query($sql);
             echo json_encode(['sucesso' => true, 'quartos' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
         } catch (Exception $e) {
