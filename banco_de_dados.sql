@@ -56,7 +56,8 @@ CREATE TABLE locacao (
 -- ÍNDICES (OTIMIZAÇÃO DE CONSULTAS)
 -- =========================================================
 
-CREATE INDEX idx_cliente_cpf
+-- UNIQUE porque o check-in reaproveita o cliente pelo CPF
+CREATE UNIQUE INDEX idx_cliente_cpf
 ON cliente (cpf);
 
 CREATE INDEX idx_quarto_status_ativo
@@ -109,6 +110,109 @@ FROM locacao l
 INNER JOIN cliente c           ON l.id_cliente = c.id_cliente
 INNER JOIN quarto q            ON l.numero_quarto = q.numero_quarto
 INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria;
+-- View 4: Faturamento mensal das locações com caixa fechado
+CREATE OR REPLACE VIEW vw_faturamento_mensal AS
+SELECT
+    YEAR(data_hora_saida)                AS ano,
+    MONTH(data_hora_saida)               AS mes,
+    DATE_FORMAT(data_hora_saida, '%m/%Y') AS mes_ano,
+    COUNT(id_locacao)                    AS qtd_locacoes,
+    SUM(valor_total)                     AS total_mes
+FROM locacao
+WHERE status_caixa = 'Fechado' AND data_hora_saida IS NOT NULL
+GROUP BY YEAR(data_hora_saida), MONTH(data_hora_saida), DATE_FORMAT(data_hora_saida, '%m/%Y');
+
+-- =========================================================
+-- TRIGGERS (AUTOMAÇÃO DO STATUS DOS QUARTOS)
+-- =========================================================
+DELIMITER $$
+
+-- Impede check-in em quarto inexistente, desativado ou que não esteja Livre
+CREATE TRIGGER trg_locacao_valida_checkin
+BEFORE INSERT ON locacao
+FOR EACH ROW
+BEGIN
+    DECLARE v_status VARCHAR(20);
+    DECLARE v_ativo  TINYINT;
+
+    SELECT status_quarto, ativo INTO v_status, v_ativo
+    FROM quarto WHERE numero_quarto = NEW.numero_quarto;
+
+    IF v_status IS NULL OR v_ativo = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Quarto inexistente ou desativado.';
+    ELSEIF v_status <> 'Livre' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Quarto não está livre para check-in.';
+    END IF;
+END$$
+
+-- Check-in gravado: o quarto passa a Ocupado
+CREATE TRIGGER trg_locacao_checkin
+AFTER INSERT ON locacao
+FOR EACH ROW
+BEGIN
+    UPDATE quarto SET status_quarto = 'Ocupado'
+    WHERE numero_quarto = NEW.numero_quarto;
+END$$
+
+-- Check-out gravado (saída passou de NULL para uma data): o quarto vai para a limpeza
+CREATE TRIGGER trg_locacao_checkout
+AFTER UPDATE ON locacao
+FOR EACH ROW
+BEGIN
+    IF OLD.data_hora_saida IS NULL AND NEW.data_hora_saida IS NOT NULL THEN
+        UPDATE quarto SET status_quarto = 'Em Limpeza'
+        WHERE numero_quarto = NEW.numero_quarto;
+    END IF;
+END$$
+
+-- Check-in cancelado (locação em aberto excluída): o quarto volta a ficar Livre
+CREATE TRIGGER trg_locacao_cancelada
+AFTER DELETE ON locacao
+FOR EACH ROW
+BEGIN
+    IF OLD.data_hora_saida IS NULL THEN
+        UPDATE quarto SET status_quarto = 'Livre'
+        WHERE numero_quarto = OLD.numero_quarto;
+    END IF;
+END$$
+
+-- =========================================================
+-- STORED PROCEDURE (CHECK-OUT)
+-- =========================================================
+-- Calcula o valor (mínimo 1 hora, fração de hora cobrada inteira) e fecha a locação.
+-- O UPDATE dispara trg_locacao_checkout, que manda o quarto para a limpeza.
+CREATE PROCEDURE sp_fazer_checkout(IN p_id_locacao INT, IN p_saida DATETIME, OUT p_total DECIMAL(6,2))
+BEGIN
+    DECLARE v_entrada DATETIME;
+    DECLARE v_valor_hora DECIMAL(5,2);
+
+    SELECT l.data_hora_entrada, cq.valor_hora INTO v_entrada, v_valor_hora
+    FROM locacao l
+    INNER JOIN quarto q            ON l.numero_quarto = q.numero_quarto
+    INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
+    WHERE l.id_locacao = p_id_locacao AND l.data_hora_saida IS NULL;
+
+    IF v_entrada IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Locação não encontrada ou já encerrada.';
+    END IF;
+    IF p_saida <= v_entrada THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'A saída deve ser posterior à entrada.';
+    END IF;
+
+    SET p_total = GREATEST(1, CEIL(TIMESTAMPDIFF(MINUTE, v_entrada, p_saida) / 60)) * v_valor_hora;
+
+    UPDATE locacao
+    SET data_hora_saida = p_saida,
+        valor_total     = p_total
+    WHERE id_locacao = p_id_locacao;
+END$$
+
+DELIMITER ;
+
 -- =========================================================
 -- Dados iniciais
 -- =========================================================

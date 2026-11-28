@@ -12,6 +12,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Gerencial — Hostel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="estilo.css">
 </head>
 <body class="min-h-screen" style="background-color:#f5f3ff;">
 
@@ -26,16 +27,16 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                 </div>
                 <div>
                     <h1 class="text-white font-bold text-base leading-tight">Hostel</h1>
-                    <p class="text-violet-300 text-xs">Painel Gerencial</p>
+                    <p class="text-violet-300 text-xs whitespace-nowrap">Painel gerencial</p>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 sm:gap-4">
                 <button onclick="abrirModalHistorico()"
-                    class="text-sm font-medium px-3 py-1.5 rounded-lg transition text-white border border-amber-700 hover:bg-amber-900">
-                    Relatório de Locações
+                    class="text-sm font-medium px-3 py-1.5 rounded-lg transition text-white bg-violet-600 hover:bg-violet-700">
+                    Relatório<span class="hidden sm:inline"> de locações</span>
                 </button>
                 <a href="recepcao.php" class="text-violet-200 hover:text-violet-100 text-sm font-medium transition">Recepção</a>
-                <a href="logout.php" class="text-red-400 hover:text-red-300 text-sm font-medium transition">Sair</a>
+                <a href="logout.php" class="text-violet-200 hover:text-white text-sm font-medium transition">Sair</a>
             </div>
         </div>
     </header>
@@ -49,22 +50,20 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
 
                 <!-- Card Faturamento -->
                 <div class="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
-                    <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Faturamento do Turno</p>
-                    <p id="valorFaturamento" class="text-4xl font-black mb-5" style="color:#7c3aed;">R$ 0,00</p>
+                    <h3 class="text-sm font-bold text-stone-700 uppercase tracking-wide mb-1">Faturamento do turno</h3>
+                    <p id="valorFaturamento" class="num text-4xl font-extrabold text-violet-900 mb-5">R$ 0,00</p>
                     <div class="flex flex-col gap-2">
                         <button onclick="abrirModalCaixa()"
-                            class="w-full text-white font-semibold py-2.5 rounded-xl transition text-sm"
-                            style="background-color:#dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">
-                            Fechar Faturamento do Dia
+                            class="w-full text-white font-semibold py-2.5 rounded-xl transition text-sm bg-violet-600 hover:bg-violet-700">
+                            Fechar faturamento do dia
                         </button>
                         <button onclick="abrirModalHistoricoCaixa()"
                             class="w-full font-semibold py-2.5 rounded-xl transition text-sm text-stone-700 bg-stone-100 hover:bg-stone-200">
-                            Ver Fechamentos Diários
+                            Ver fechamentos diários
                         </button>
                         <button onclick="abrirModalHistoricoMes()"
-                            class="w-full text-white font-semibold py-2.5 rounded-xl transition text-sm"
-                            style="background-color:#1d4ed8;" onmouseover="this.style.backgroundColor='#1e40af'" onmouseout="this.style.backgroundColor='#1d4ed8'">
-                            Fechamento Mensal
+                            class="w-full text-stone-700 font-semibold py-2.5 rounded-xl transition text-sm bg-stone-100 hover:bg-stone-200">
+                            Fechamento mensal
                         </button>
                     </div>
                 </div>
@@ -76,8 +75,8 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-stone-100">
-                                <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Categoria</th>
-                                <th class="text-right py-2 text-xs text-stone-400 font-semibold uppercase">Novo R$/h</th>
+                                <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Categoria</th>
+                                <th class="text-right py-2 text-xs text-stone-500 font-semibold uppercase">Novo R$/h</th>
                                 <th class="py-2"></th>
                             </tr>
                         </thead>
@@ -94,19 +93,18 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-bold text-stone-700 uppercase tracking-wide">Gestão de Quartos</h3>
                         <button onclick="abrirModalNovoQuarto()"
-                            class="text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                            style="background-color:#16a34a;" onmouseover="this.style.backgroundColor='#15803d'" onmouseout="this.style.backgroundColor='#16a34a'">
-                            + Novo Quarto
+                            class="text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition bg-violet-600 hover:bg-violet-700">
+                            + Novo quarto
                         </button>
                     </div>
                     <div class="overflow-x-auto max-h-80 overflow-y-auto">
                         <table class="w-full text-sm">
                             <thead class="sticky top-0 bg-white">
                                 <tr class="border-b border-stone-100">
-                                    <th class="text-left py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Nº</th>
-                                    <th class="text-left py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Categoria</th>
-                                    <th class="text-left py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Status</th>
-                                    <th class="text-center py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Ações</th>
+                                    <th class="text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Nº</th>
+                                    <th class="hidden sm:table-cell text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Categoria</th>
+                                    <th class="text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Status</th>
+                                    <th class="text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaQuartos"></tbody>
@@ -121,9 +119,9 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-stone-100">
-                                    <th class="text-left py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Nº</th>
-                                    <th class="text-left py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Categoria</th>
-                                    <th class="text-center py-2 px-3 text-xs text-stone-400 font-semibold uppercase">Ação</th>
+                                    <th class="text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Nº</th>
+                                    <th class="text-left py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Categoria</th>
+                                    <th class="text-center py-2 px-3 text-xs text-stone-500 font-semibold uppercase">Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaInativos"></tbody>
@@ -138,7 +136,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: FECHAR CAIXA                          -->
     <!-- ============================================ -->
-    <div id="modalFecharCaixa" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalFecharCaixa" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm text-center p-8">
             <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -148,8 +146,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
             <h2 class="text-lg font-bold text-stone-800 mb-2">Fechar Faturamento</h2>
             <p class="text-stone-500 text-sm mb-6">Tem certeza que deseja encerrar o turno atual?</p>
             <button onclick="confirmarFechamentoCaixa()"
-                class="w-full text-white font-semibold py-3 rounded-xl transition mb-2"
-                style="background-color:#dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">
+                class="w-full text-white font-semibold py-3 rounded-xl transition mb-2 bg-violet-600 hover:bg-violet-700">
                 Sim, Encerrar Turno
             </button>
             <button onclick="fecharModalCaixa()" class="w-full text-stone-500 hover:text-stone-700 text-sm py-2 transition">Cancelar</button>
@@ -160,19 +157,21 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: HISTÓRICO DIÁRIO                      -->
     <!-- ============================================ -->
-    <div id="modalHistoricoCaixa" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalHistoricoCaixa" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
                 <h2 class="text-lg font-bold text-stone-800">Fechamentos Diários</h2>
-                <button onclick="fecharModalHistoricoCaixa()" class="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                <button onclick="fecharModalHistoricoCaixa()" aria-label="Fechar" class="p-1 -m-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             <div class="p-6 max-h-96 overflow-y-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-stone-100">
-                            <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Data</th>
-                            <th class="text-center py-2 text-xs text-stone-400 font-semibold uppercase">Locações</th>
-                            <th class="text-right py-2 text-xs text-stone-400 font-semibold uppercase">Total</th>
+                            <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Data</th>
+                            <th class="text-center py-2 text-xs text-stone-500 font-semibold uppercase">Locações</th>
+                            <th class="text-right py-2 text-xs text-stone-500 font-semibold uppercase">Total</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaHistoricoCaixaBody"></tbody>
@@ -184,19 +183,21 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: HISTÓRICO MENSAL                      -->
     <!-- ============================================ -->
-    <div id="modalHistoricoMes" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalHistoricoMes" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
-                <h2 class="text-lg font-bold" style="color:#1d4ed8;">Fechamento Mensal</h2>
-                <button onclick="fecharModalHistoricoMes()" class="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                <h2 class="text-lg font-bold text-stone-800">Fechamento mensal</h2>
+                <button onclick="fecharModalHistoricoMes()" aria-label="Fechar" class="p-1 -m-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             <div class="p-6 max-h-96 overflow-y-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-stone-100">
-                            <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Mês/Ano</th>
-                            <th class="text-center py-2 text-xs text-stone-400 font-semibold uppercase">Locações</th>
-                            <th class="text-right py-2 text-xs text-stone-400 font-semibold uppercase">Faturamento</th>
+                            <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Mês/Ano</th>
+                            <th class="text-center py-2 text-xs text-stone-500 font-semibold uppercase">Locações</th>
+                            <th class="text-right py-2 text-xs text-stone-500 font-semibold uppercase">Faturamento</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaHistoricoMesBody"></tbody>
@@ -208,21 +209,23 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: HISTÓRICO DE LOCAÇÕES                 -->
     <!-- ============================================ -->
-    <div id="modalHistorico" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalHistorico" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
                 <h2 class="text-lg font-bold text-stone-800">Histórico de Locações</h2>
-                <button onclick="fecharModalHistorico()" class="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                <button onclick="fecharModalHistorico()" aria-label="Fechar" class="p-1 -m-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             <div class="p-6 max-h-96 overflow-y-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-stone-100">
-                            <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Cliente</th>
-                            <th class="text-center py-2 text-xs text-stone-400 font-semibold uppercase">Quarto</th>
-                            <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Entrada</th>
-                            <th class="text-left py-2 text-xs text-stone-400 font-semibold uppercase">Saída</th>
-                            <th class="text-right py-2 text-xs text-stone-400 font-semibold uppercase">Total</th>
+                            <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Cliente</th>
+                            <th class="text-center py-2 text-xs text-stone-500 font-semibold uppercase">Quarto</th>
+                            <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Entrada</th>
+                            <th class="text-left py-2 text-xs text-stone-500 font-semibold uppercase">Saída</th>
+                            <th class="text-right py-2 text-xs text-stone-500 font-semibold uppercase">Total</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaHistoricoBody"></tbody>
@@ -234,26 +237,27 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: NOVO QUARTO                           -->
     <!-- ============================================ -->
-    <div id="modalNovoQuarto" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalNovoQuarto" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
                 <h2 class="text-lg font-bold text-stone-800">Adicionar Quarto</h2>
-                <button onclick="fecharModalNovoQuarto()" class="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                <button onclick="fecharModalNovoQuarto()" aria-label="Fechar" class="p-1 -m-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             <div class="px-6 py-5 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Número do Quarto *</label>
+                    <label for="novo_numero_quarto" class="block text-xs font-semibold text-stone-600 uppercase tracking-wide mb-1">Número do Quarto *</label>
                     <input type="number" id="novo_numero_quarto"
-                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm">
+                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Categoria *</label>
+                    <label for="nova_categoria_quarto" class="block text-xs font-semibold text-stone-600 uppercase tracking-wide mb-1">Categoria *</label>
                     <select id="nova_categoria_quarto"
-                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"></select>
+                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"></select>
                 </div>
                 <button onclick="salvarNovoQuarto()"
-                    class="w-full text-white font-semibold py-3 rounded-xl transition"
-                    style="background-color:#16a34a;" onmouseover="this.style.backgroundColor='#15803d'" onmouseout="this.style.backgroundColor='#16a34a'">
+                    class="w-full text-white font-semibold py-3 rounded-xl transition bg-violet-600 hover:bg-violet-700">
                     Cadastrar Quarto
                 </button>
                 <div id="mensagemNovoQuarto" class="text-center text-sm font-medium hidden"></div>
@@ -264,22 +268,23 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <!-- ============================================ -->
     <!-- MODAL: EDITAR QUARTO                         -->
     <!-- ============================================ -->
-    <div id="modalEditarQuarto" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalEditarQuarto" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
                 <h2 class="text-lg font-bold text-stone-800">Alterar Categoria — Quarto <span id="tituloEdicaoQuarto"></span></h2>
-                <button onclick="fecharModalEditarQuarto()" class="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                <button onclick="fecharModalEditarQuarto()" aria-label="Fechar" class="p-1 -m-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             <div class="px-6 py-5 space-y-4">
                 <input type="hidden" id="edit_numero_quarto">
                 <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Nova Categoria *</label>
+                    <label for="edit_categoria_quarto" class="block text-xs font-semibold text-stone-600 uppercase tracking-wide mb-1">Nova Categoria *</label>
                     <select id="edit_categoria_quarto"
-                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"></select>
+                        class="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-stone-800 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm"></select>
                 </div>
                 <button onclick="salvarEdicaoQuarto()"
-                    class="w-full font-semibold py-3 rounded-xl transition text-violet-900"
-                    style="background-color:#f59e0b;" onmouseover="this.style.backgroundColor='#d97706'" onmouseout="this.style.backgroundColor='#f59e0b'">
+                    class="w-full font-semibold py-3 rounded-xl transition text-violet-900 bg-violet-600 hover:bg-violet-700">
                     Atualizar Categoria
                 </button>
                 <div id="mensagemEditarQuarto" class="text-center text-sm font-medium hidden"></div>
@@ -288,6 +293,11 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     </div>
 
     <script>
+        // Esc fecha o modal que estiver aberto
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('[role="dialog"]:not(.hidden)').forEach(m => m.classList.add('hidden'));
+        });
+
         // ---- FUNÇÕES DO PAINEL ----
         function mostrarMsg(id, texto, ok) {
             const el = document.getElementById(id);
@@ -314,13 +324,12 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                         <tr class="border-b border-stone-50">
                             <td class="py-2.5 text-stone-700 font-medium">${cat.nome_categoria}</td>
                             <td class="py-2.5 text-right">
-                                <input type="number" step="0.01" class="w-20 px-2 py-1 border border-stone-200 rounded-lg text-sm text-right focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                <input type="number" step="0.01" class="w-20 px-2 py-1 border border-stone-200 rounded-lg text-sm text-right focus:outline-none focus:ring-1 focus:ring-violet-400"
                                     id="preco_${cat.codigo_categoria}" value="${cat.valor_hora}">
                             </td>
                             <td class="py-2.5 pl-2">
                                 <button onclick="atualizarPreco(${cat.codigo_categoria})"
-                                    class="text-xs text-white px-2.5 py-1 rounded-lg font-semibold"
-                                    style="background-color:#7c3aed;">Salvar</button>
+                                    class="text-xs text-white px-2.5 py-1 rounded-lg font-semibold bg-violet-600 hover:bg-violet-700">Salvar</button>
                             </td>
                         </tr>`;
                     const opt = `<option value="${cat.codigo_categoria}">${cat.nome_categoria}</option>`;
@@ -347,20 +356,18 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                 tbody.innerHTML = '';
                 if (!dados.sucesso) return;
                 dados.quartos.forEach(q => {
-                    const sc = q.status_quarto === 'Livre' ? 'color:#16a34a' :
-                               q.status_quarto === 'Ocupado' ? 'color:#dc2626' : 'color:#d97706';
+                    const sc = q.status_quarto === 'Livre' ? 'background:#dcfce7;color:#15803d' :
+                               q.status_quarto === 'Ocupado' ? 'background:#fee2e2;color:#b91c1c' : 'background:#fef3c7;color:#92400e';
                     tbody.innerHTML += `
                         <tr class="border-b border-stone-50 hover:bg-stone-50">
-                            <td class="py-2.5 px-3 font-bold text-stone-800">${q.numero_quarto}</td>
-                            <td class="py-2.5 px-3 text-stone-500 text-xs">${q.nome_categoria}</td>
-                            <td class="py-2.5 px-3 text-xs font-bold" style="${sc}">${q.status_quarto}</td>
-                            <td class="py-2.5 px-3 text-center">
+                            <td class="py-2.5 px-3 font-bold text-stone-800 num">${q.numero_quarto}</td>
+                            <td class="hidden sm:table-cell py-2.5 px-3 text-stone-500 text-xs">${q.nome_categoria}</td>
+                            <td class="py-2.5 px-3"><span class="rounded-full px-2.5 py-0.5 text-xs font-bold" style="${sc}">${q.status_quarto}</span></td>
+                            <td class="py-2.5 px-3 text-left">
                                 <button onclick="abrirModalEditarQuarto(${q.numero_quarto})"
-                                    class="text-xs font-semibold px-2 py-1 rounded-lg mr-1 text-violet-900"
-                                    style="background-color:#ede9fe;">Categoria</button>
+                                    class="whitespace-nowrap my-0.5 text-xs font-semibold px-2.5 py-1 rounded-lg mr-1 text-violet-800 bg-violet-50 hover:bg-violet-100 transition">Alterar categoria</button>
                                 ${q.status_quarto === 'Livre' ? `<button onclick="confirmarDesativar(${q.numero_quarto})"
-                                    class="text-xs text-white font-semibold px-2 py-1 rounded-lg"
-                                    style="background-color:#dc2626;">Desativar</button>` : ''}
+                                    class="whitespace-nowrap my-0.5 text-xs font-semibold px-2.5 py-1 rounded-lg text-red-700 hover:bg-red-50 transition">Desativar</button>` : ''}
                             </td>
                         </tr>`;
                 });
@@ -432,7 +439,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                         tbody.innerHTML += `<tr class="border-b border-stone-50">
                             <td class="py-2.5 font-medium text-stone-800">${dia.data_formatada}</td>
                             <td class="py-2.5 text-center text-stone-500">${dia.qtd_locacoes}</td>
-                            <td class="py-2.5 text-right font-bold" style="color:#16a34a;">${v}</td>
+                            <td class="py-2.5 text-right font-bold text-stone-900 num">${v}</td>
                         </tr>`;
                     });
                 } else {
@@ -453,7 +460,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                         tbody.innerHTML += `<tr class="border-b border-stone-50">
                             <td class="py-2.5 font-medium text-stone-800">${mes.mes_ano}</td>
                             <td class="py-2.5 text-center text-stone-500">${mes.qtd_locacoes}</td>
-                            <td class="py-2.5 text-right font-bold" style="color:#1d4ed8;">${v}</td>
+                            <td class="py-2.5 text-right font-bold text-stone-900 num">${v}</td>
                         </tr>`;
                     });
                 } else {
@@ -477,7 +484,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                             ? `<span class="text-stone-500">${loc.saida}</span>`
                             : `<span class="text-amber-600 font-semibold">Em andamento</span>`;
                         const valor = v
-                            ? `<span style="color:#16a34a;">${v}</span>`
+                            ? `<span class="num text-stone-900">${v}</span>`
                             : `<span class="text-stone-300">—</span>`;
                         tbody.innerHTML += `<tr class="border-b border-stone-50 hover:bg-stone-50">
                             <td class="py-2.5 text-stone-700">${loc.nome}</td>
@@ -503,12 +510,11 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
                     card.classList.remove('hidden');
                     dados.quartos.forEach(q => {
                         tbody.innerHTML += `<tr class="border-b border-stone-50">
-                            <td class="py-2.5 px-3 font-bold text-stone-800">${q.numero_quarto}</td>
+                            <td class="py-2.5 px-3 font-bold text-stone-800 num">${q.numero_quarto}</td>
                             <td class="py-2.5 px-3 text-stone-500 text-xs">${q.nome_categoria}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <button onclick="reativarQuarto(${q.numero_quarto})"
-                                    class="text-xs text-white font-semibold px-3 py-1 rounded-lg"
-                                    style="background-color:#16a34a;">Reativar</button>
+                                    class="text-xs font-semibold px-2.5 py-1 rounded-lg text-violet-800 bg-violet-50 hover:bg-violet-100 transition">Reativar</button>
                             </td>
                         </tr>`;
                     });
@@ -561,18 +567,17 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['nivel'] !== 'admin') {
     <div id="toastPainel" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg" style="min-width:220px;text-align:center;"></div>
 
     <!-- MODAL: CONFIRMAR DESATIVAÇÃO -->
-    <div id="modalConfirmDesativar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
+    <div id="modalConfirmDesativar" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color:rgba(0,0,0,0.65);">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm text-center px-6 py-7">
             <p class="text-stone-800 font-bold text-lg mb-1">Desativar Quarto <span id="numQuartoConfirm"></span>?</p>
-            <p class="text-stone-400 text-sm mb-6">O histórico de locações será preservado.</p>
+            <p class="text-stone-500 text-sm mb-6">O histórico de locações será preservado.</p>
             <div class="flex gap-3">
                 <button onclick="document.getElementById('modalConfirmDesativar').classList.add('hidden')"
                     class="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition">
                     Cancelar
                 </button>
                 <button id="btnConfirmDesativar"
-                    class="flex-1 py-2.5 rounded-xl text-white font-semibold text-sm transition"
-                    style="background-color:#dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">
+                    class="flex-1 py-2.5 rounded-xl text-white font-semibold text-sm transition bg-red-600 hover:bg-red-700">
                     Desativar
                 </button>
             </div>

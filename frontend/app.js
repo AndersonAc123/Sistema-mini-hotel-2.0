@@ -1,6 +1,19 @@
 // ==========================================
 // CARREGAMENTO DOS QUARTOS (GRID)
 // ==========================================
+// Cor e ação de cada status, usadas no cartão do quarto
+const STATUS_QUARTO = {
+    'Livre':      { cor: '#22c55e', fundo: '#dcfce7', texto: '#15803d', acao: 'Fazer check-in' },
+    'Ocupado':    { cor: '#ef4444', fundo: '#fee2e2', texto: '#b91c1c', acao: 'Fazer check-out' },
+    'Em Limpeza': { cor: '#f59e0b', fundo: '#fef3c7', texto: '#92400e', acao: 'Liberar quarto' }
+};
+
+// Essa função formata um valor em reais no padrão brasileiro
+function emReais(valor) {
+    return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// Essa função busca os quartos ativos e monta a grade da recepção
 function carregarQuartos() {
     fetch('../backend/api.php?acao=buscar_quartos')
     .then(r => r.json())
@@ -8,54 +21,26 @@ function carregarQuartos() {
         if (!dados.sucesso) return;
         const grid = document.getElementById('listaQuartos');
         grid.innerHTML = '';
+        const contagem = { 'Livre': 0, 'Ocupado': 0, 'Em Limpeza': 0 };
 
         dados.quartos.forEach(q => {
-            let topColor, badgeBg, badgeText;
+            const st = STATUS_QUARTO[q.status_quarto] || STATUS_QUARTO['Em Limpeza'];
+            if (q.status_quarto in contagem) contagem[q.status_quarto]++;
 
-            if (q.status_quarto === 'Livre') {
-                topColor  = '#22c55e';
-                badgeBg   = '#dcfce7';
-                badgeText = '#15803d';
-            } else if (q.status_quarto === 'Ocupado') {
-                topColor  = '#ef4444';
-                badgeBg   = '#fee2e2';
-                badgeText = '#b91c1c';
-            } else {
-                topColor  = '#f59e0b';
-                badgeBg   = '#fef3c7';
-                badgeText = '#b45309';
-            }
-
-            const card = document.createElement('div');
-            card.style.cssText = `
-                background:#fff;
-                border-radius:1rem;
-                border-top:4px solid ${topColor};
-                box-shadow:0 1px 4px rgba(0,0,0,0.08);
-                cursor:pointer;
-                padding:1.25rem 1rem;
-                text-align:center;
-                transition:box-shadow 0.2s, transform 0.15s;
-            `;
-
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'cartao-quarto group flex flex-col justify-start bg-white rounded-2xl text-left p-4 shadow-sm border border-stone-200/70 focus-visible:outline-violet-600';
+            card.style.borderTop = `4px solid ${st.cor}`;
+            card.setAttribute('aria-label', `Quarto ${q.numero_quarto}, ${q.status_quarto}. ${st.acao}`);
             card.innerHTML = `
-                <p style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Quarto</p>
-                <h3 style="font-size:2rem;font-weight:800;color:#1c1917;margin:0 0 4px 0;">${q.numero_quarto}</h3>
-                <p style="font-size:12px;color:#78716c;margin:0 0 2px 0;">${q.nome_categoria}</p>
-                <p style="font-size:13px;font-weight:600;color:#7c3aed;margin:0 0 10px 0;">R$ ${parseFloat(q.valor_hora).toFixed(2)}/h</p>
-                <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:${badgeBg};color:${badgeText};">
-                    ${q.status_quarto}
-                </span>
+                <div class="flex items-start justify-between gap-2">
+                    <span class="num text-3xl font-extrabold text-stone-900 leading-none">${q.numero_quarto}</span>
+                    <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold" style="background:${st.fundo};color:${st.texto}">${q.status_quarto}</span>
+                </div>
+                <p class="mt-3 text-sm text-stone-600">${q.nome_categoria}</p>
+                <p class="num text-sm font-semibold text-violet-700 mb-3">${emReais(q.valor_hora)} por hora</p>
+                <p class="mt-auto pt-3 border-t border-stone-100 text-xs font-semibold text-stone-500 group-hover:text-violet-700 group-focus-visible:text-violet-700 transition-colors">${st.acao}</p>
             `;
-
-            card.addEventListener('mouseenter', () => {
-                card.style.boxShadow = '0 4px 16px rgba(0,0,0,0.13)';
-                card.style.transform = 'translateY(-2px)';
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
-                card.style.transform = 'translateY(0)';
-            });
 
             card.addEventListener('click', () => {
                 if (q.status_quarto === 'Livre')        abrirModal(q.numero_quarto);
@@ -65,9 +50,21 @@ function carregarQuartos() {
 
             grid.appendChild(card);
         });
+
+        document.getElementById('contLivre').innerText    = contagem['Livre'];
+        document.getElementById('contOcupado').innerText  = contagem['Ocupado'];
+        document.getElementById('contLimpeza').innerText  = contagem['Em Limpeza'];
     })
     .catch(e => console.error('Erro ao buscar quartos:', e));
 }
+
+// Esc fecha o modal aberto
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!document.getElementById('modalCheckin').classList.contains('hidden'))  fecharModal();
+    if (!document.getElementById('modalCheckout').classList.contains('hidden')) fecharModalCheckout();
+    if (!document.getElementById('modalLimpeza').classList.contains('hidden'))  fecharModalLimpeza();
+});
 
 carregarQuartos();
 
@@ -148,7 +145,8 @@ document.getElementById('telefone').addEventListener('input', function(e) {
 // ==========================================
 function abrirModal(numeroQuarto) {
     document.getElementById('modalCheckin').classList.remove('hidden');
-    document.getElementById('tituloModal').innerText = `Entrada — Quarto ${numeroQuarto}`;
+    document.getElementById('tituloModal').innerText = `Check-in no quarto ${numeroQuarto}`;
+    setTimeout(() => document.getElementById('nome').focus(), 0);
     document.getElementById('quarto_selecionado').value = numeroQuarto;
     document.getElementById('mensagemModal').classList.add('hidden');
 
@@ -308,6 +306,25 @@ function confirmarCheckout() {
             el.style.color = '#dc2626';
             el.innerText = dados.mensagem;
         }
+    });
+}
+
+// Essa função cancela um check-in lançado por engano, excluindo a locação em aberto
+function cancelarCheckin() {
+    if (!confirm('Excluir esta locação e liberar o quarto?')) return;
+
+    fetch('../backend/api.php?acao=cancelar_checkin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id_locacao: document.getElementById('id_locacao_checkout').value })
+    })
+    .then(r => r.json())
+    .then(dados => {
+        const el = document.getElementById('mensagemCheckout');
+        el.classList.remove('hidden');
+        el.style.color = dados.sucesso ? '#16a34a' : '#dc2626';
+        el.innerText = dados.mensagem;
+        if (dados.sucesso) setTimeout(() => { fecharModalCheckout(); carregarQuartos(); }, 1400);
     });
 }
 

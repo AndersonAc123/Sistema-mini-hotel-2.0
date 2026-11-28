@@ -6,6 +6,11 @@ header('Content-Type: application/json');
 // Garante o fuso horário correto do Brasil em todas as operações
 date_default_timezone_set('America/Sao_Paulo');
 
+// Essa função devolve só o texto do SIGNAL das triggers e da procedure, sem o código SQLSTATE na frente
+function mensagemErro($e) {
+    return ($e instanceof PDOException && isset($e->errorInfo[2])) ? $e->errorInfo[2] : $e->getMessage();
+}
+
 $acao = $_GET['acao'] ?? '';
 $dados = json_decode(file_get_contents("php://input"));
 
@@ -32,15 +37,25 @@ switch ($acao) {
             try {
                 $pdo->beginTransaction();
 
-                $sqlCliente = "INSERT INTO cliente (nome, cpf, telefone, data_nascimento) VALUES (:nome, :cpf, :telefone, :data_nascimento)";
-                $stmtCliente = $pdo->prepare($sqlCliente);
-                $stmtCliente->execute([
+                // Cliente que já se hospedou é encontrado pelo CPF (índice idx_cliente_cpf) e tem os dados atualizados
+                $stmtBusca = $pdo->prepare("SELECT id_cliente FROM cliente WHERE cpf = :cpf");
+                $stmtBusca->execute([':cpf' => $dados->cpf]);
+                $id_cliente = $stmtBusca->fetchColumn();
+
+                $dadosCliente = [
                     ':nome'            => $dados->nome,
                     ':cpf'             => $dados->cpf,
                     ':telefone'        => $dados->telefone,
                     ':data_nascimento' => $dados->data_nascimento
-                ]);
-                $id_cliente = $pdo->lastInsertId();
+                ];
+                if ($id_cliente) {
+                    $sqlCliente = "UPDATE cliente SET nome = :nome, telefone = :telefone, data_nascimento = :data_nascimento WHERE cpf = :cpf";
+                    $pdo->prepare($sqlCliente)->execute($dadosCliente);
+                } else {
+                    $sqlCliente = "INSERT INTO cliente (nome, cpf, telefone, data_nascimento) VALUES (:nome, :cpf, :telefone, :data_nascimento)";
+                    $pdo->prepare($sqlCliente)->execute($dadosCliente);
+                    $id_cliente = $pdo->lastInsertId();
+                }
 
                 $dataEntrada   = str_replace('T', ' ', $dados->data_hora_entrada);
                 $saidaEstimada = !empty($dados->data_hora_saida_estimada)
@@ -58,15 +73,13 @@ switch ($acao) {
                     ':placa'          => $dados->placa_veiculo ?? null
                 ]);
 
-                $sqlQuarto = "UPDATE quarto SET status_quarto = 'Ocupado' WHERE numero_quarto = :quarto";
-                $stmtQuarto = $pdo->prepare($sqlQuarto);
-                $stmtQuarto->execute([':quarto' => $dados->quarto]);
+                // O quarto passa a Ocupado pela trigger trg_locacao_checkin
 
                 $pdo->commit();
                 echo json_encode(['sucesso' => true, 'mensagem' => 'Check-in realizado com sucesso!']);
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
+                echo json_encode(['sucesso' => false, 'mensagem' => mensagemErro($e)]);
             }
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Preencha todos os campos obrigatórios.']);
@@ -116,29 +129,48 @@ switch ($acao) {
 
                 $dataSaida = str_replace('T', ' ', $dados->data_hora_saida);
 
-                // Calcula total: mínimo 1 hora, arredonda para cima
-                $sqlCalc = "SELECT GREATEST(1, CEIL(TIMESTAMPDIFF(MINUTE, l.data_hora_entrada, :saida) / 60)) * cq.valor_hora AS total
-                            FROM locacao l
-                            INNER JOIN quarto q ON l.numero_quarto = q.numero_quarto
-                            INNER JOIN categoria_quarto cq ON q.codigo_categoria = cq.codigo_categoria
-                            WHERE l.id_locacao = :id";
-                $stmtCalc = $pdo->prepare($sqlCalc);
-                $stmtCalc->execute([':saida' => $dataSaida, ':id' => $dados->id_locacao]);
-                $valorTotal = $stmtCalc->fetchColumn();
-
-                $sqlLocacao = "UPDATE locacao SET data_hora_saida = :saida, valor_total = :total WHERE id_locacao = :id";
-                $stmtLocacao = $pdo->prepare($sqlLocacao);
-                $stmtLocacao->execute([':saida' => $dataSaida, ':total' => $valorTotal, ':id' => $dados->id_locacao]);
-
-                $sqlQuarto = "UPDATE quarto SET status_quarto = 'Em Limpeza' WHERE numero_quarto = :quarto";
-                $stmtQuarto = $pdo->prepare($sqlQuarto);
-                $stmtQuarto->execute([':quarto' => $dados->quarto]);
+                // A procedure calcula o valor e fecha a locação, e a trigger trg_locacao_checkout manda o quarto para a limpeza
+                $stmt = $pdo->prepare("CALL sp_fazer_checkout(:id, :saida, @total)");
+                $stmt->execute([':id' => $dados->id_locacao, ':saida' => $dataSaida]);
+                $stmt->closeCursor();
 
                 $pdo->commit();
                 echo json_encode(['sucesso' => true, 'mensagem' => 'Check-out efetuado! Quarto enviado para a limpeza.']);
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
+                echo json_encode(['sucesso' => false, 'mensagem' => mensagemErro($e)]);
+            }
+        }
+        exit;
+
+    case 'cancelar_checkin':
+        if (!empty($dados->id_locacao)) {
+            try {
+                $pdo->beginTransaction();
+
+                $stmtCli = $pdo->prepare("SELECT id_cliente FROM locacao WHERE id_locacao = :id AND data_hora_saida IS NULL");
+                $stmtCli->execute([':id' => $dados->id_locacao]);
+                $id_cliente = $stmtCli->fetchColumn();
+                if (!$id_cliente) {
+                    $pdo->rollBack();
+                    echo json_encode(['sucesso' => false, 'mensagem' => 'Locação não encontrada ou já encerrada.']);
+                    exit;
+                }
+
+                // Exclui a locação lançada por engano, e a trigger trg_locacao_cancelada libera o quarto
+                $pdo->prepare("DELETE FROM locacao WHERE id_locacao = :id AND data_hora_saida IS NULL")
+                    ->execute([':id' => $dados->id_locacao]);
+
+                // Cliente sem nenhuma outra locação também é excluído
+                $pdo->prepare("DELETE FROM cliente WHERE id_cliente = :cli
+                               AND NOT EXISTS (SELECT 1 FROM locacao WHERE id_cliente = :cli2)")
+                    ->execute([':cli' => $id_cliente, ':cli2' => $id_cliente]);
+
+                $pdo->commit();
+                echo json_encode(['sucesso' => true, 'mensagem' => 'Check-in cancelado e quarto liberado.']);
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                echo json_encode(['sucesso' => false, 'mensagem' => mensagemErro($e)]);
             }
         }
         exit;
@@ -248,13 +280,10 @@ switch ($acao) {
 
     case 'buscar_historico_mes':
         try {
-            $sql = "SELECT DATE_FORMAT(data_hora_saida, '%m/%Y') as mes_ano, 
-                           SUM(valor_total) as total_mes, 
-                           COUNT(id_locacao) as qtd_locacoes
-                    FROM locacao 
-                    WHERE status_caixa = 'Fechado' AND data_hora_saida IS NOT NULL
-                    GROUP BY YEAR(data_hora_saida), MONTH(data_hora_saida) 
-                    ORDER BY YEAR(data_hora_saida) DESC, MONTH(data_hora_saida) DESC 
+            // Usa a View vw_faturamento_mensal
+            $sql = "SELECT mes_ano, total_mes, qtd_locacoes
+                    FROM vw_faturamento_mensal
+                    ORDER BY ano DESC, mes DESC
                     LIMIT 24";
             
             $stmt = $pdo->query($sql);

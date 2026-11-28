@@ -1,0 +1,16 @@
+/* Ajustes que o Tailwind não cobre: seleção, foco e números das telas do hostel */
+::selection { background: #ddd6fe; color: #1e1b4b; }
+
+:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; }
+
+input { caret-color: #7c3aed; }
+
+/* valores em reais e números de quarto alinham coluna a coluna */
+.num { font-variant-numeric: tabular-nums; }
+
+/* cartão de quarto: sobe um pouco no hover, sem animar quem pediu menos movimento */
+.cartao-quarto { transition: box-shadow .2s ease-out, transform .2s ease-out; }
+.cartao-quarto:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -6px rgba(30, 27, 75, .25); }
+@media (prefers-reduced-motion: reduce) {
+    .cartao-quarto, .cartao-quarto:hover { transition: none; transform: none; }
+}
